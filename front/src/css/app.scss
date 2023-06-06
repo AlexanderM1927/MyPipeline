@@ -1,0 +1,64 @@
+// app global css in SCSS form
+body {
+    font-family:'Roboto';
+    background: #FFFFFF;
+}
+
+.header {
+    background: $primary;
+    height: 70px;
+    padding-top: 10px;
+}
+.nav {
+    background: $primary;
+    color: #FFFFFF;
+}
+
+.user {
+    background: #F4F4F4;
+    color: #000000;
+    height: 70px;
+    padding-top: 27px;
+    text-align: center;
+}
+
+.container {
+    background: #F4F4F4;
+    padding: 10px;
+}
+
+.fc-header-toolbar {
+    max-height: 20px;
+}
+
+.fc-center h2{
+    display: none !important;
+}
+
+.login {
+    margin-left: auto;
+    margin-right: auto;
+    background: #FFFFFF;
+    height: 100vh !important;
+    padding: 10px;
+    color: #000000;
+}
+
+body::-webkit-scrollbar {
+    width: 8px;     /* Tamaño del scroll en vertical */
+    height: 8px;    /* Tamaño del scroll en horizontal */
+}
+/* Ponemos un color de fondo y redondeamos las esquinas del thumb */
+body::-webkit-scrollbar-thumb {
+    background: #000;
+    border-radius: 4px;
+}
+/* Cambiamos el fondo y agregamos una sombra cuando esté en hover */
+body::-webkit-scrollbar-thumb:hover {
+    background: #000;
+    box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.2);
+}
+/* Cambiamos el fondo cuando esté en active */
+body::-webkit-scrollbar-thumb:active {
+    background-color: #000;
+}
