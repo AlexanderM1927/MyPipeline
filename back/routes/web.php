@@ -55,4 +55,3 @@ $router->group(['prefix' => 'v1'], function () use ($router) {
         $router->post('modify_task', 'TasksController@update');
     });
 });
-
