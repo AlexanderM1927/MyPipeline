@@ -12,6 +12,10 @@
 */
 
 $router->group(['prefix' => 'v1'], function () use ($router) {
+    $router->get('/test', function () {
+        return 'it works';
+    });
+
     $router->post('login', 'AuthController@login');
     $router->post('register', 'AuthController@register');
     $router->get('sendnotify', 'GeneralController@sendNotify');
