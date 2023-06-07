@@ -44,8 +44,8 @@ class GeneralController extends Controller
         $token = $builder
             ->issuedBy($keyData['client_email'])
             ->permittedFor('https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit')
-            ->issuedAt(time())
-            ->expiresAt(time() + 3600) // El token expirará en 1 hora
+            ->issuedAt(new \DateTimeImmutable()) // Fecha de emisión actual
+            ->expiresAt((new \DateTimeImmutable())->modify('+1 hour')) // Fecha de expiración en 1 hora
             ->getToken($signer, $privateKey);
 
         // Obtiene el token de acceso
