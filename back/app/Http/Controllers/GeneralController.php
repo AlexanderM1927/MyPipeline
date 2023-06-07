@@ -18,8 +18,6 @@ use GuzzleHttp\Client;
 
 class GeneralController extends Controller
 {
-
-    private $accessToken;
     /**
      * Create a new controller instance.
      *
@@ -27,34 +25,6 @@ class GeneralController extends Controller
      */
     public function __construct()
     {
-        // Ruta al archivo JSON con la clave de servicio de FCM
-        $keyFilePath = '../../clave-fcm.json';
-
-        // Carga la clave privada desde el archivo JSON
-        $keyContents = file_get_contents($keyFilePath);
-
-        $keyData = json_decode($keyContents, true);
-
-        $privateKey = InMemory::plainText($keyData['private_key']);
-
-        // Crea un generador de tokens JWT
-        $builder = new Builder();
-        $signer = new Sha256();
-
-
-        // Configura el token JWT
-        $token = $builder
-            ->issuedBy($keyData['client_email'])
-            ->permittedFor('https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit')
-            ->issuedAt(new \DateTimeImmutable()) // Fecha de emisión actual
-            ->expiresAt((new \DateTimeImmutable())->modify('+1 hour')) // Fecha de expiración en 1 hora
-            ->getToken($signer, $privateKey);
-
-        // Obtiene el token de acceso
-        $accessToken = (string) $token;
-
-        // Genera el token de acceso utilizando la clave privada
-        $this->accessToken = $accessToken;
     }
 
 
@@ -86,7 +56,8 @@ class GeneralController extends Controller
                 ]
             ];
 
-            Log::info('$this->accessToken: '.$this->accessToken);
+            Log::info('$message');
+            Log::info($message);
 
             $client = new Client();
             $response = $client->post('https://fcm.googleapis.com/fcm/send', [
