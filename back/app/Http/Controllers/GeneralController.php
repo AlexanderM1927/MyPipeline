@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Task;
 use App\User;
 use App\Mail\MessageSend;
-use Firebase\JWT\JWT;
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\ServiceAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -27,29 +28,18 @@ class GeneralController extends Controller
         // Ruta al archivo JSON con la clave de servicio de FCM
         $keyFilePath = '../../clave-fcm.json';
 
-        // Lee el contenido del archivo JSON
-        $keyFileContent = file_get_contents($keyFilePath);
+        $serviceAccount = ServiceAccount::fromJsonFile($keyFilePath);
 
-        Log::info('$keyFileContent');
-        Log::info($keyFileContent);
+        // Crea una instancia del servicio Firebase
+        $firebase = (new Factory)
+            ->withServiceAccount($serviceAccount)
+            ->create();
 
-        // Decodifica el contenido JSON y obtiene la clave privada
-        $keyData = json_decode($keyFileContent, true);
-        $privateKey = $keyData['private_key'];
-
-        Log::info('$privateKey');
-        Log::info($privateKey);
-
-        $tokenData = [
-            'iss' => $keyData['client_email'],
-            'sub' => $keyData['client_email'],
-            'aud' => 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit',
-            'iat' => time(),
-            'exp' => time() + 3600, // El token expirará en 1 hora
-        ];
+        // Obtiene un token de acceso
+        $accessToken = $firebase->getAccessToken();
 
         // Genera el token de acceso utilizando la clave privada
-        $this->accessToken = JWT::encode($tokenData, $privateKey, 'RS256');
+        $this->accessToken = $accessToken;
     }
 
 
