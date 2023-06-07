@@ -31,11 +31,14 @@ class GeneralController extends Controller
         $keyFileContent = file_get_contents($keyFilePath);
 
         Log::info('$keyFileContent');
-        Log::info($keyFileContent['private_key']);
+        Log::info($keyFileContent);
 
         // Decodifica el contenido JSON y obtiene la clave privada
         $keyData = json_decode($keyFileContent, true);
         $privateKey = $keyData['private_key'];
+
+        Log::info('$privateKey');
+        Log::info($privateKey);
 
         $tokenData = [
             'iss' => $keyData['client_email'],
