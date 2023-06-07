@@ -91,9 +91,9 @@ class GeneralController extends Controller
             Log::info('$this->accessToken: '.$this->accessToken);
 
             $client = new Client();
-            $response = $client->post('https://fcm.googleapis.com/v1/projects/' . env('FCM_PROJECT_ID') . '/messages:send', [
+            $response = $client->post('https://fcm.googleapis.com/fcm/send', [
                 'headers' => [
-                    'Authorization' => 'Bearer ' . $this->accessToken,
+                    'Authorization' => 'key=' . 'AAAAufDIQ1c:APA91bGt0xDZu5ifFU-12L8tWskd5w1ORM58R_xY6x1wKpxYsVfMZnkhJPwk-9wxwYEBF7VLDrw3m0KqZhkcg_5BpDRO7BmpmtYQzSVAxKAVnWZ5hVhhJc0PEDPxZ_tiZHHAkg0zzyNz',
                     'Content-Type' => 'application/json',
                 ],
                 'json' => $message,
