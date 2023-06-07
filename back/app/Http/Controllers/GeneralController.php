@@ -21,7 +21,7 @@ class GeneralController extends Controller
     public function __construct()
     {
     }
-    
+
 
     public function sendNotify () {
         $users = DB::table('users')
@@ -45,10 +45,12 @@ class GeneralController extends Controller
             $reg_id = $user->token_notifications;
 
             $message = [
-                'notification' => [
-                    'title' => 'Tarea de hoy',
-                    'body' => 'Tienes una tarea: '.$user->task_name
-                    
+                'message' => [
+                    'notification' => [
+                        'title' => 'Tarea de hoy',
+                        'body' => 'Tienes una tarea: '.$user->task_name
+
+                    ],
                 ],
                 'to' => $reg_id
             ];
