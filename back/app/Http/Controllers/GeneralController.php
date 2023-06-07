@@ -88,7 +88,7 @@ class GeneralController extends Controller
             $client = new Client();
             $response = $client->post('https://fcm.googleapis.com/v1/projects/' . env('FCM_PROJECT_ID') . '/messages:send', [
                 'headers' => [
-                    'Authorization' => 'Bearer ' . $accessToken,
+                    'Authorization' => 'Bearer ' . $this->accessToken,
                     'Content-Type' => 'application/json',
                 ],
                 'json' => $message,
