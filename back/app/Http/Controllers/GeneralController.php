@@ -32,13 +32,15 @@ class GeneralController extends Controller
 
         // Carga la clave privada desde el archivo JSON
         $keyContents = file_get_contents($keyFilePath);
-        $privateKey = InMemory::plainText($keyContents);
+
+        $keyData = json_decode($keyContents, true);
+
+        $privateKey = InMemory::plainText($keyData['private_key']);
 
         // Crea un generador de tokens JWT
         $builder = new Builder();
         $signer = new Sha256();
 
-        $keyData = json_decode($keyContents, true);
 
         // Configura el token JWT
         $token = $builder
