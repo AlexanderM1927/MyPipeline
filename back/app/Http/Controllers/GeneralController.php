@@ -48,28 +48,30 @@ class GeneralController extends Controller
             Mail::to($user->email)->send(new MessageSend('Tienes una tarea: '.$user->task_name,$body,$user->email));
             $reg_id = $user->token_notifications;
 
-            $message = [
-                'to' => $reg_id,
-                'notification' => [
-                    'title' => 'Tarea de hoy',
-                    'body' => 'Tienes una tarea: '.$user->task_name
-                ]
-            ];
+            if ($reg_id) {
+                $message = [
+                    'to' => $reg_id,
+                    'notification' => [
+                        'title' => 'Tarea de hoy',
+                        'body' => 'Tienes una tarea: '.$user->task_name
+                    ]
+                ];
 
-            Log::info('$message');
-            Log::info($message);
+                $client = new Client();
+                $response = $client->post('https://fcm.googleapis.com/fcm/send', [
+                    'headers' => [
+                        'Authorization' => 'key=' . 'AAAAufDIQ1c:APA91bGt0xDZu5ifFU-12L8tWskd5w1ORM58R_xY6x1wKpxYsVfMZnkhJPwk-9wxwYEBF7VLDrw3m0KqZhkcg_5BpDRO7BmpmtYQzSVAxKAVnWZ5hVhhJc0PEDPxZ_tiZHHAkg0zzyNz',
+                        'Content-Type' => 'application/json',
+                    ],
+                    'json' => $message,
+                ]);
+                echo $response->getBody();
 
-            $client = new Client();
-            $response = $client->post('https://fcm.googleapis.com/fcm/send', [
-                'headers' => [
-                    'Authorization' => 'key=' . 'AAAAufDIQ1c:APA91bGt0xDZu5ifFU-12L8tWskd5w1ORM58R_xY6x1wKpxYsVfMZnkhJPwk-9wxwYEBF7VLDrw3m0KqZhkcg_5BpDRO7BmpmtYQzSVAxKAVnWZ5hVhhJc0PEDPxZ_tiZHHAkg0zzyNz',
-                    'Content-Type' => 'application/json',
-                ],
-                'json' => $message,
-            ]);
+            } else {
+                echo 'Sent';
+            }
 
 
-            echo $response->getBody();
         }
     }
 
