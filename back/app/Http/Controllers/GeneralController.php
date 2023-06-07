@@ -40,7 +40,7 @@ class GeneralController extends Controller
 
         // Configura el token JWT
         $token = $builder
-            ->issuedBy($privateKey->get('client_email'))
+            ->issuedBy($privateKey->getContent()['client_email'])
             ->permittedFor('https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit')
             ->issuedAt(time())
             ->expiresAt(time() + 3600) // El token expirará en 1 hora
