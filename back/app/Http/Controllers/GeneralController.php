@@ -79,13 +79,11 @@ class GeneralController extends Controller
             $reg_id = $user->token_notifications;
 
             $message = [
-                'message' => [
-                    'notification' => [
-                        'title' => 'Tarea de hoy',
-                        'body' => 'Tienes una tarea: '.$user->task_name
-                    ],
-                    'token' => $reg_id
-                ],
+                'to' => $reg_id,
+                'notification' => [
+                    'title' => 'Tarea de hoy',
+                    'body' => 'Tienes una tarea: '.$user->task_name
+                ]
             ];
 
             Log::info('$this->accessToken: '.$this->accessToken);
