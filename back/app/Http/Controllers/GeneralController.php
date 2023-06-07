@@ -28,7 +28,7 @@ class GeneralController extends Controller
         // Ruta al archivo JSON con la clave de servicio de FCM
         $keyFilePath = '../../clave-fcm.json';
 
-        $serviceAccount = ServiceAccount::fromJsonFile($keyFilePath);
+        $serviceAccount = ServiceAccount::fromJson(file_get_contents($keyFilePath));
 
         // Crea una instancia del servicio Firebase
         $firebase = (new Factory)
