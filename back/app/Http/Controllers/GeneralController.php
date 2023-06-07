@@ -32,10 +32,11 @@ class GeneralController extends Controller
 
         // Crea una instancia del servicio Firebase
         $firebase = (new Factory)
-            ->withServiceAccount($serviceAccount);
+            ->withServiceAccount($serviceAccount)
+            ->createAuth();
 
         // Obtiene un token de acceso
-        $accessToken =  $firebase->getAuth()->createCustomToken($serviceAccount->getUid());
+        $accessToken =  $firebase->createCustomToken($serviceAccount->getUid());
 
         // Genera el token de acceso utilizando la clave privada
         $this->accessToken = $accessToken;
