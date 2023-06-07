@@ -36,7 +36,7 @@ class GeneralController extends Controller
             ->create();
 
         // Obtiene un token de acceso
-        $accessToken = $firebase->getAccessToken();
+        $accessToken =  $firebase->getAuth()->createCustomToken($serviceAccount->getUid());
 
         // Genera el token de acceso utilizando la clave privada
         $this->accessToken = $accessToken;
