@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Task;
 use App\User;
 use App\Mail\MessageSend;
-use Kreait\Firebase\Factory;
-use Kreait\Firebase\ServiceAccount;
+use Lcobucci\JWT\Signer\Key\LocalFileReference;
+use Lcobucci\JWT\Signer\Key\InMemory;
+use Lcobucci\JWT\Signer\Rsa\Sha256;
+use Lcobucci\JWT\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -28,15 +30,24 @@ class GeneralController extends Controller
         // Ruta al archivo JSON con la clave de servicio de FCM
         $keyFilePath = '../../clave-fcm.json';
 
-        $serviceAccount = ServiceAccount::fromValue(file_get_contents($keyFilePath));
+        // Carga la clave privada desde el archivo JSON
+        $keyContents = file_get_contents($keyFilePath);
+        $privateKey = InMemory::plainText($keyContents);
 
-        // Crea una instancia del servicio Firebase
-        $firebase = (new Factory)
-            ->withServiceAccount($serviceAccount)
-            ->createAuth();
+        // Crea un generador de tokens JWT
+        $builder = new Builder();
+        $signer = new Sha256();
 
-        // Obtiene un token de acceso
-        $accessToken =  $firebase->createCustomToken($serviceAccount->getUid());
+        // Configura el token JWT
+        $token = $builder
+            ->issuedBy($privateKey->get('client_email'))
+            ->permittedFor('https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit')
+            ->issuedAt(time())
+            ->expiresAt(time() + 3600) // El token expirará en 1 hora
+            ->getToken($signer, $privateKey);
+
+        // Obtiene el token de acceso
+        $accessToken = (string) $token;
 
         // Genera el token de acceso utilizando la clave privada
         $this->accessToken = $accessToken;
