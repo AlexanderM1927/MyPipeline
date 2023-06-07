@@ -1,14 +1,16 @@
 <?php
 
 namespace App\Http\Controllers;
+
+use App\Task;
+use App\User;
+use App\Mail\MessageSend;
+use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use App\User;
-use App\Task;
 use Log;
-use App\Mail\MessageSend;
 use GuzzleHttp\Client;
 
 class GeneralController extends Controller
@@ -24,6 +26,28 @@ class GeneralController extends Controller
 
 
     public function sendNotify () {
+
+        // Ruta al archivo JSON con la clave de servicio de FCM
+        $keyFilePath = '../../clave-fcm.json';
+
+        // Lee el contenido del archivo JSON
+        $keyFileContent = file_get_contents($keyFilePath);
+
+        // Decodifica el contenido JSON y obtiene la clave privada
+        $keyData = json_decode($keyFileContent, true);
+        $privateKey = $keyData['private_key'];
+
+        $tokenData = [
+            'iss' => $keyData['client_email'],
+            'sub' => $keyData['client_email'],
+            'aud' => 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit',
+            'iat' => time(),
+            'exp' => time() + 3600, // El token expirará en 1 hora
+        ];
+
+        // Genera el token de acceso utilizando la clave privada
+        $accessToken = JWT::encode($tokenData, $privateKey, 'RS256');
+
         $users = DB::table('users')
         ->join('clients', 'users.id', '=', 'clients.usuario_id')
         ->join('proyects', 'clients.id', '=', 'proyects.cliente_id')
@@ -40,8 +64,6 @@ class GeneralController extends Controller
             $body .= '<b>Cliente:</b> '.$user->cliente_name.'<br><br>';
             $body .= '<a href="'. env('APP_URL') .'">Ir a MyPipeline</a>';
             Mail::to($user->email)->send(new MessageSend('Tienes una tarea: '.$user->task_name,$body,$user->email));
-            $access_token = 'AAAAufDIQ1c:APA91bF3mI7O2JWmDvBw6mWv6Ga-DUIyhXAlb6TxcxnH19XEvmBtuTZcIhB5YWfm3x9vd7wVT0n5pAhVYXkUzU8jX7RKNhOTPIUdKY09N421Uh91LAF9P4JdgM281zN4d9Y503B86CU0';
-
             $reg_id = $user->token_notifications;
 
             $message = [
@@ -51,19 +73,18 @@ class GeneralController extends Controller
                         'body' => 'Tienes una tarea: '.$user->task_name
 
                     ],
+                    'token' => $reg_id
                 ],
-                'to' => $reg_id
             ];
 
-            $client = new Client([
+            $client = new Client();
+            $response = $client->post('https://fcm.googleapis.com/v1/projects/' . env('FCM_PROJECT_ID') . '/messages:send', [
                 'headers' => [
                     'Content-Type' => 'application/json',
-                    'Authorization' => 'key='.$access_token,
-                ]
+                    'Authorization' => 'Barer '.$accessToken,
+                ],
+                'json' => $message
             ]);
-            $response = $client->post('https://fcm.googleapis.com/fcm/send',
-                ['body' => json_encode($message)]
-            );
 
             echo $response->getBody();
         }
