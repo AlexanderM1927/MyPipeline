@@ -15,6 +15,8 @@ use GuzzleHttp\Client;
 
 class GeneralController extends Controller
 {
+
+    private $accessToken;
     /**
      * Create a new controller instance.
      *
@@ -22,16 +24,14 @@ class GeneralController extends Controller
      */
     public function __construct()
     {
-    }
-
-
-    public function sendNotify () {
-
         // Ruta al archivo JSON con la clave de servicio de FCM
         $keyFilePath = '../../clave-fcm.json';
 
         // Lee el contenido del archivo JSON
         $keyFileContent = file_get_contents($keyFilePath);
+
+        Log::info('$keyFileContent');
+        Log::info($keyFileContent['private_key']);
 
         // Decodifica el contenido JSON y obtiene la clave privada
         $keyData = json_decode($keyFileContent, true);
@@ -46,7 +46,11 @@ class GeneralController extends Controller
         ];
 
         // Genera el token de acceso utilizando la clave privada
-        $accessToken = JWT::encode($tokenData, $privateKey, 'RS256');
+        $this->accessToken = JWT::encode($tokenData, $privateKey, 'RS256');
+    }
+
+
+    public function sendNotify () {
 
         $users = DB::table('users')
         ->join('clients', 'users.id', '=', 'clients.usuario_id')
@@ -71,20 +75,22 @@ class GeneralController extends Controller
                     'notification' => [
                         'title' => 'Tarea de hoy',
                         'body' => 'Tienes una tarea: '.$user->task_name
-
                     ],
                     'token' => $reg_id
                 ],
             ];
 
+            Log::info('$this->accessToken: '.$this->accessToken);
+
             $client = new Client();
             $response = $client->post('https://fcm.googleapis.com/v1/projects/' . env('FCM_PROJECT_ID') . '/messages:send', [
                 'headers' => [
+                    'Authorization' => 'Bearer ' . $accessToken,
                     'Content-Type' => 'application/json',
-                    'Authorization' => 'Barer '.$accessToken,
                 ],
-                'json' => $message
+                'json' => $message,
             ]);
+
 
             echo $response->getBody();
         }
