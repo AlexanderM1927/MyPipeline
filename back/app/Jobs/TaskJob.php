@@ -27,6 +27,6 @@ class TaskJob extends Job
      */
     public function handle()
     {
-        Mail::to($user->email)->send(new MessageSend('Tienes una tarea: '.$user->task_name,$body,$user->email));
+        Mail::to($this->user->email)->send(new MessageSend('Tienes una tarea: '.$this->user->task_name,$this->body,$this->user->email));
     }
 }
