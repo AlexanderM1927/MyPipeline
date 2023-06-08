@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\TaskJob;
 use App\Task;
 use App\User;
-use App\Mail\MessageSend;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Log;
 use GuzzleHttp\Client;
 
@@ -41,7 +40,7 @@ class GeneralController extends Controller
             $body .= '<b>Proyecto:</b> '.$user->proyecto_name.'<br><br>';
             $body .= '<b>Cliente:</b> '.$user->cliente_name.'<br><br>';
             $body .= '<a href="'. env('APP_URL') .'">Ir a MyPipeline</a>';
-            Mail::to($user->email)->send(new MessageSend('Tienes una tarea: '.$user->task_name,$body,$user->email));
+            dispatch(new TaskJob($user, $body));
             $reg_id = $user->token_notifications;
 
             if ($reg_id) {
