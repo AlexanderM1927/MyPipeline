@@ -1,0 +1,46 @@
+version: "3.5"
+services:
+  frontend:
+    container_name: frontend_mypipeline
+    build: 
+      dockerfile: Dockerfile
+      context: ./front
+    volumes:
+      - ./front:/usr/src/front-app
+      - ./front/package.json:/usr/src/front-app/package.json
+      - /usr/src/front-app/node_modules
+    ports:
+      - "9092:9092"
+    networks:
+      - network_mypipeline
+
+  backend:
+    container_name: backend_mypipeline
+    build: 
+      dockerfile: Dockerfile
+      context: ./back
+    volumes:
+      - ./back/:/usr/src/back-app
+      - ./back/composer.json:/usr/src/back-app/composer.json
+      - ./back/composer.lock:/usr/src/back-app/composer.lock
+      - ./back/public:/usr/src/back-app/public
+      - /usr/src/back-app/vendor
+    ports:
+      - "8002:8002"
+    networks:
+      - network_mypipeline
+    
+  db:
+    image: mysql:8
+    command: --default-authentication-plugin=mysql_native_password # needed as of mysql 8
+    ports:
+      - "3308:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USERNAME}
+    networks:
+      - network_mypipeline
+
+networks:
+  network_mypipeline: {}
