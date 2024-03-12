@@ -28,7 +28,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 
 # Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --1
-RUN composer self-update
+RUN composer self-update --2
 RUN composer install
 
 EXPOSE 8002
