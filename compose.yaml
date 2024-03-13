@@ -29,18 +29,6 @@ services:
       - "8002:8002"
     networks:
       - network_mypipeline
-    
-  db:
-    image: mysql:8
-    command: --default-authentication-plugin=mysql_native_password # needed as of mysql 8
-    ports:
-      - "3308:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USERNAME}
-    networks:
-      - network_mypipeline
 
 networks:
   network_mypipeline: {}
