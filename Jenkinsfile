@@ -32,7 +32,7 @@ pipeline {
                 dir('./back') {
                     sh 'composer install'
                     sh 'composer dump-autoload'
-                    sh 'php artisan migrate'
+                    sh 'php artisan migrate --force'
                 }
             }
         }
