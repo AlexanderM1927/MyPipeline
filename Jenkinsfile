@@ -29,6 +29,10 @@ pipeline {
         }
         stage('Backend installed dependencies and run migrations') {
             steps {
+                withCredentials([file(credentialsId: 'envmypipeline', variable: 'ENV_FILE')]) {
+                    sh 'rm -f ./back/.env'
+                    sh 'cp "\$ENV_FILE" ./back/.env'
+                }
                 dir('./back') {
                     sh 'composer install'
                     sh 'composer dump-autoload'
