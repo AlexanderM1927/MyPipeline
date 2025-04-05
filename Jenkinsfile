@@ -6,9 +6,7 @@ pipeline {
     stages {
         stage('Prepare logs and permissions') {
             steps {
-                dir('./back') {
-                    sh 'sudo chown -R jenkins:www-data /var/lib/jenkins/workspace/mypipeline/back/storage'
-                }
+                sh 'sudo chown -R jenkins:www-data /var/lib/jenkins/workspace/mypipeline/back/storage'
             }
         }
         stage('Frontend prepare') {
