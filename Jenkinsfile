@@ -6,7 +6,9 @@ pipeline {
     stages {
         stage('Prepare logs and permissions') {
             steps {
-                sh 'sudo chown -R jenkins:www-data /var/lib/jenkins/workspace/mypipeline/back/storage'
+                dir('./back') {
+                    sh 'sudo chown -R jenkins:www-data ./storage'
+                }
             }
         }
         stage('Frontend prepare') {
@@ -43,8 +45,8 @@ pipeline {
                     sh 'cp "\$ENV_FILE" ./back/.env'
                 }
                 dir('./back') {
-                    sh 'sudo chown -R jenkins:www-data /var/lib/jenkins/workspace/mypipeline/back/storage/'
-                    sh 'sudo chmod -R 775 /var/lib/jenkins/workspace/mypipeline/back/storage/'
+                    sh 'sudo chown -R jenkins:www-data ./storage/'
+                    sh 'sudo chmod -R 775 ./storage/'
                     sh 'composer install'
                     sh 'composer dump-autoload'
                     sh 'php artisan migrate --force'
