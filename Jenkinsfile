@@ -4,6 +4,13 @@ pipeline {
         disableConcurrentBuilds()
     }
     stages {
+        stage('Prepare logs and permissions') {
+            steps {
+                dir('./back') {
+                    sh 'sudo chown -R jenkins:www-data /var/lib/jenkins/workspace/mypipeline/back/storage'
+                }
+            }
+        }
         stage('Frontend prepare') {
             tools {
                 nodejs 'node-21.11.1'
@@ -38,6 +45,7 @@ pipeline {
                     sh 'cp "\$ENV_FILE" ./back/.env'
                 }
                 dir('./back') {
+                    sh 'sudo chown -R www-data:jenkins /var/lib/jenkins/workspace/myguardmoney/back/storage/'
                     sh 'composer install'
                     sh 'composer dump-autoload'
                     sh 'php artisan migrate --force'
