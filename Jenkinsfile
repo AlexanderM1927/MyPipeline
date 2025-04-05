@@ -44,6 +44,7 @@ pipeline {
                     sh 'rm -f ./back/.env'
                     sh 'cp "\$ENV_FILE" ./back/.env'
                     sh 'sudo chown -R jenkins:root ./back/.env'
+                    sh 'sudo chmod 644 ./back/.env'
                 }
                 dir('./back') {
                     sh 'sudo chown -R jenkins:www-data ./storage/'
