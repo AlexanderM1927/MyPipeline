@@ -43,6 +43,7 @@ pipeline {
                 withCredentials([file(credentialsId: 'envmypipeline', variable: 'ENV_FILE')]) {
                     sh 'rm -f ./back/.env'
                     sh 'cp "\$ENV_FILE" ./back/.env'
+                    sh 'sudo chown -R jenkins:root ./.env'
                 }
                 dir('./back') {
                     sh 'sudo chown -R jenkins:www-data ./storage/'
