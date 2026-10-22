@@ -1,0 +1,73 @@
+name: mypipeline
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app_runtime
+      args:
+        ALPINE_MIRROR: '${ALPINE_MIRROR:-dl-cdn.alpinelinux.org}'
+    image: mypipeline-app:latest
+    restart: unless-stopped
+    env_file:
+      - ./back/.env
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - storage-data:/var/www/html/storage
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 9000) ? 0 : 1);"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web_runtime
+      args:
+        FRONTEND_ENV_HASH: '${FRONTEND_ENV_HASH:-local}'
+      secrets:
+        - frontend_env
+    image: mypipeline-web:latest
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${APP_PORT:-8002}:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  scheduler:
+    image: mypipeline-app:latest
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    env_file:
+      - ./back/.env
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: ["sh", "-c", "while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"]
+    volumes:
+      - storage-data:/var/www/html/storage
+
+secrets:
+  frontend_env:
+    file: ./front/.env
+
+volumes:
+  storage-data:
