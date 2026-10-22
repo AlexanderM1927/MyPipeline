@@ -15,9 +15,6 @@ services:
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
-      # Host-era Jenkins credentials may still select localhost or a Unix socket.
-      DB_HOST: '${PRODUCTION_DB_HOST:-host.docker.internal}'
-      DB_SOCKET: ""
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -62,8 +59,6 @@ services:
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
-      DB_HOST: '${PRODUCTION_DB_HOST:-host.docker.internal}'
-      DB_SOCKET: ""
     extra_hosts:
       - "host.docker.internal:host-gateway"
     command: ["sh", "-c", "while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"]

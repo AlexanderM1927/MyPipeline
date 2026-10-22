@@ -27,12 +27,8 @@ Keep these Jenkins secret file credentials:
 
 In the backend credential, preserve the existing `APP_KEY` and `JWT_SECRET`, set
 `APP_URL=https://mypipeline.alexanderm.co`, and keep the production database and mail settings.
-Production Compose sets `DB_HOST=host.docker.internal` and clears `DB_SOCKET` for
-both the app and scheduler, overriding any host-era `localhost` or socket setting
-in the backend credential. MySQL must accept connections from the Docker network.
-The database name, username, password, and port still come from that credential.
-If MySQL runs on another server, set `PRODUCTION_DB_HOST` in the Jenkins job
-environment (or export it for a manual deployment) to that server's hostname.
+For MySQL running on the Docker host, use `DB_HOST=host.docker.internal`, rather than
+`localhost` or `127.0.0.1`; MySQL must accept connections from the Docker network.
 This deployment uses `QUEUE_CONNECTION=sync`, matching the project's default. A
 different queue connection requires its own worker and queue infrastructure.
 Containers always set `APP_ENV=production` and `APP_DEBUG=false`.
@@ -104,15 +100,3 @@ Check `http://127.0.0.1:8002/`, a frontend history route, and an authenticated
 checks the FPM listener. Database connectivity is checked by the migration step.
 For service logs, run `docker compose -f docker-compose.prod.yml logs --tail=100`;
 Lumen's file logs remain under `storage/logs` in the storage volume.
-
-## Database connection troubleshooting
-
-`SQLSTATE[HY000] [2002] No such file or directory` during migration usually means
-PDO is trying a Unix socket that is unavailable inside the container. PHP also
-uses a Unix socket when the MySQL hostname is `localhost`
-([PDO MySQL connection documentation](https://www.php.net/manual/en/ref.pdo-mysql.connection.php)).
-The production Compose overrides above prevent both cases. After updating the
-deployment files, rerun Jenkins; changing the container environment requires no
-database reset. If the next error is `Connection refused`, check the MySQL TCP
-listener and Docker-network access on the VPS. If it is `Access denied`, check the
-database credentials and the user's allowed connecting host.
