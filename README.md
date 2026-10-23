@@ -2,7 +2,9 @@
 
 Create your own pipeline.
 
-Local development uses `compose.yaml`. Production uses the separate
+Local development uses `compose.yaml`; the backend build context is the
+repository root so it can include the shared PHP security files in `docker/php/`.
+Production uses the separate
 `docker-compose.prod.yml` and root `Dockerfile`, following the MyTurner deployment
 pattern with versions and commands adapted to this Lumen 7 / Quasar 1 application.
 
@@ -78,10 +80,13 @@ persistent storage.
 ## Deployment
 
 The Jenkins pipeline injects both environment files, builds production images,
-runs `php artisan migrate --force` in a one-off container, then recreates the
-services and waits for their health checks. A failed build or migration stops the
-pipeline before the running services are replaced. Database migrations should be
-compatible with the previous application version during this transition.
+verifies the PHP security backport, runs `php artisan migrate --force` in a
+one-off container, then recreates the services and waits for health checks.
+It verifies the running app and scheduler backports and checks that `/v1/test`
+returns `it works` through Nginx and PHP-FPM. A failed build, image security
+check, or migration stops the pipeline before running services are replaced.
+Database migrations should be compatible with the previous application version
+during this transition.
 
 For a manual deployment, provide `back/.env` and `front/.env` as above, then run:
 
@@ -96,7 +101,64 @@ docker compose ps
 ```
 
 Check `http://127.0.0.1:8002/`, a frontend history route, and an authenticated
-`/v1/` API request after deployment. `/healthz` checks Nginx; the app health check
-checks the FPM listener. Database connectivity is checked by the migration step.
+`/v1/` API request after deployment. `/v1/test` should return `it works`; the
+web health check uses it to check Nginx, PHP-FPM and Lumen together. `/healthz`
+checks Nginx alone, and the app health check checks the FPM listener. Database
+connectivity is checked by the migration step.
 For service logs, run `docker compose -f docker-compose.prod.yml logs --tail=100`;
 Lumen's file logs remain under `storage/logs` in the storage volume.
+
+
+## PHP2Shell security update (October 2026)
+
+Production and development rebuild PHP 7.4.33 with the PHP security team's
+[official backport](https://github.com/php/php-src/commit/712e60f9edfd03f0960fc4fc3c2c375f42b90aa2)
+for CVE-2026-109618 and CVE-2026-109619, linked from the
+[PHP security advisory](https://www.php.net/archive/2026.php).
+The patch in `docker/php/patches/` is checked against its SHA-256 and applied before
+compiling PHP and extensions. Retained extension sources are patched as well.
+Both builds run the same safety check, and the development image uses Alpine
+PHP 7.4.33 and Composer 2.2 to share this procedure with production.
+
+The minimal EOL backport immediately terminates workers on memory exhaustion,
+skipping shutdown handlers, and disables session upload progress. Normal requests
+retain their configured memory limit. PHP 7.4 remains unsupported; this backport
+does not restore general security support.
+
+Push these changes and deploy through Jenkins normally. The pipeline verifies
+the image before migrations, recreates `app`, `web`, and `scheduler`, and checks
+the running containers and API. For a security-only manual deployment, from the
+production checkout with the existing environment files present, run:
+
+```sh
+set -eu
+export COMPOSE_FILE=docker-compose.prod.yml
+export COMPOSE_PROJECT_NAME=mypipeline
+docker compose config --quiet
+docker compose build --pull app
+docker run --rm --network none --entrypoint sh \
+  mypipeline-app:latest /usr/local/bin/php-security-check
+docker compose up -d --no-build --force-recreate --wait --wait-timeout 120 app web scheduler
+docker compose exec -T app sh /usr/local/bin/php-security-check
+docker compose exec -T scheduler sh /usr/local/bin/php-security-check
+docker compose ps
+curl --fail --silent --show-error "http://127.0.0.1:${APP_PORT:-8002}/v1/test"
+```
+
+Expect `PHP2Shell backport verified` with both CVE IDs and an API response of
+`it works`. No database migration is required for this security-only update.
+The first build recompiles PHP and can take several minutes; later builds reuse
+the PHP layer while its inputs, base image and Docker cache remain unchanged.
+`PHP_BUILD_JOBS` defaults to 2 to limit compiler memory use.
+
+`php -v` still reports 7.4.33. Identify the patched runtime with the security
+check and the image label `org.mypipeline.php2shell.commit`. Updating host PHP or
+restarting an old image does not patch the engine inside a container. If this
+site is still served through a host PHP-FPM socket, update that runtime through
+its package vendor and verify coverage for both CVEs.
+
+For local development, rebuild from the repository root:
+
+```sh
+docker compose -f compose.yaml up -d --build backend
+```

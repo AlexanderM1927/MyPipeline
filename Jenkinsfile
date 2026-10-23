@@ -47,6 +47,16 @@ pipeline {
             }
         }
 
+        stage('Verify PHP security backport') {
+            steps {
+                // Check the new image before changing the running deployment.
+                sh '''
+                    docker run --rm --network none --entrypoint sh \
+                        mypipeline-app:latest /usr/local/bin/php-security-check
+                '''
+            }
+        }
+
         stage('Run database migrations') {
             steps {
                 sh 'docker compose run --rm --no-deps app php artisan migrate --force --no-interaction'
@@ -58,6 +68,19 @@ pipeline {
                 // Restart web as well so Nginx resolves the recreated PHP-FPM container.
                 sh 'docker compose up -d --no-build --force-recreate --wait --wait-timeout 120 app web scheduler'
                 sh 'docker compose ps'
+            }
+        }
+
+        stage('Verify deployment') {
+            steps {
+                sh '''
+                    set -eu
+                    docker compose exec -T app sh /usr/local/bin/php-security-check
+                    docker compose exec -T scheduler sh /usr/local/bin/php-security-check
+                    api_response="$(docker compose exec -T web wget -q -O - http://127.0.0.1/v1/test)"
+                    test "$api_response" = 'it works'
+                    printf 'API check passed: %s\n' "$api_response"
+                '''
             }
         }
     }

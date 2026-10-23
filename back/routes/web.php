@@ -11,6 +11,10 @@
 |
 */
 $router->group(['prefix' => 'v1'], function () use ($router) {
+    // Check Nginx, PHP-FPM and Lumen without authentication or database access.
+    $router->get('test', function () {
+        return 'it works';
+    });
 
     $router->post('login', 'AuthController@login');
     $router->post('register', 'AuthController@register');
